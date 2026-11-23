@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" href="logo.jpeg">
+<title>ARENA RACE — DRIFT FAN VOTE</title>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#0a0a0a;--card:#141416;--line:#26262a;--red:#ff1e2d;--txt:#fff;--mut:#9a9aa3}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+body{background:
+ radial-gradient(900px 400px at 50% -100px,#4a060c,transparent),
+ repeating-linear-gradient(45deg,#ffffff05 0 2px,transparent 2px 6px),var(--bg);
+ background-attachment:fixed;color:var(--txt);font:400 16px Inter,sans-serif;min-height:100vh;padding-bottom:env(safe-area-inset-bottom);overflow-x:hidden}
+.wrap{max-width:560px;margin:auto;padding:20px 16px 60px}
+h1,h2,.rs{font-family:'Russo One',Impact,sans-serif;text-transform:uppercase;letter-spacing:.02em}
+.brand{display:flex;align-items:center;gap:10px;padding-top:env(safe-area-inset-top)}
+.brand b{font:22px 'Russo One';line-height:1}.brand small{display:block;color:var(--red);letter-spacing:.35em;font-size:11px;font-weight:800}
+.stripe{width:6px;height:36px;background:var(--red);transform:skewX(-20deg)}
+.hero{padding:34px 0 20px;position:relative}
+.hero:before{content:"";position:absolute;inset:0 -16px auto;height:100%;background:repeating-linear-gradient(100deg,transparent 0 38px,#ff1e2d14 38px 40px);mask-image:linear-gradient(#000,transparent);-webkit-mask-image:linear-gradient(#000,transparent);pointer-events:none;animation:speed 3s linear infinite}
+@keyframes speed{to{background-position:80px 0}}
+.hero h1{font-size:clamp(34px,10vw,52px);line-height:1;font-style:italic;text-shadow:0 4px 30px #ff1e2d55}
+.hero h1 span{background:linear-gradient(90deg,var(--red),#ff6a3d);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--mut);margin-top:14px;line-height:1.5}
+.pill{display:inline-flex;gap:8px;align-items:center;margin-top:18px;padding:8px 14px;border:1px solid var(--line);border-radius:99px;font-weight:800;font-size:12px;letter-spacing:.12em}
+.dot{width:9px;height:9px;border-radius:50%;background:#2cff6a;animation:p 1.2s infinite}.closed .dot{background:var(--red);animation:none}
+@keyframes p{50%{opacity:.25;transform:scale(.7)}}
+
+/* ===== Scrollbars Racing ===== */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#111;border-radius:99px}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--red),#8d0010);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:#ff4754}
+
+/* ===== Busca & Controles do Carrossel de Pilotos ===== */
+.search-box{position:relative;margin-bottom:14px}
+.search-box input{width:100%;padding:12px 14px 12px 38px;background:#111114;border:1px solid var(--line);border-radius:12px;color:#fff;font:inherit;font-size:14px;transition:.2s}
+.search-box input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px #ff1e2d26}
+.search-box svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--mut);pointer-events:none}
+.carousel-wrap{position:relative}
+.grid{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:4px 2px 14px;-webkit-overflow-scrolling:touch}
+.card{flex:0 0 84%;max-width:340px;scroll-snap-align:center;background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;position:relative;transition:transform .28s cubic-bezier(.2,.9,.3,1.2),box-shadow .28s,border-color .25s;animation:up .4s both;cursor:pointer}
+@keyframes up{from{opacity:0;transform:translateY(14px)}}
+.card:hover{transform:translateY(-4px)}
+.card:before{content:"";position:absolute;left:0;top:0;width:60px;height:4px;background:var(--red);z-index:2;box-shadow:0 0 14px var(--red)}
+.card.sel{border-color:var(--red);transform:scale(1.02);box-shadow:0 0 0 2px var(--red),0 14px 44px #ff1e2d44}
+.card.picking{animation:pickPulse .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pickPulse{0%{transform:scale(1)}40%{transform:scale(.95)}75%{transform:scale(1.04)}100%{transform:scale(1.02)}}
+.nav-arrows{display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:10px}
+.nav-btn{background:#18181c;border:1px solid var(--line);color:#fff;width:38px;height:38px;border-radius:10px;font:18px 'Russo One';cursor:pointer;display:grid;place-items:center;transition:.15s}
+.nav-btn:active{transform:scale(.9);border-color:var(--red);color:var(--red)}
+.dots-ind{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;flex:1}
+.dots-ind span{width:7px;height:7px;border-radius:99px;background:#2a2a30;transition:.25s;cursor:pointer}
+.dots-ind span.on{width:22px;background:var(--red);box-shadow:0 0 8px var(--red)}
+
+.ph{aspect-ratio:16/10;background:#000 center/cover;position:relative;overflow:hidden}
+.ph:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 40%,var(--card))}
+.card.sel .ph:before{content:"SELECIONADO";position:absolute;left:12px;top:12px;z-index:2;background:var(--red);color:#fff;font:10px 'Russo One';letter-spacing:.14em;padding:4px 9px;border-radius:6px;box-shadow:0 4px 14px #000}
+.num{position:absolute;right:12px;top:8px;z-index:1;font:46px 'Russo One';font-style:italic;-webkit-text-stroke:1px #fff;color:transparent;text-shadow:0 0 24px #ff1e2d}.num i{color:var(--red);-webkit-text-stroke:0;font-size:24px}
+.info{padding:4px 18px 18px}.info h2{font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.info p{color:var(--mut);font-size:14px;margin-top:4px}
+.team{display:inline-block;margin-top:10px;font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--red);text-transform:uppercase}
+.btn{width:100%;margin-top:14px;padding:15px;border:0;border-radius:12px;background:var(--red);color:#fff;font:15px 'Russo One';letter-spacing:.06em;cursor:pointer;transition:.15s;clip-path:polygon(0 0,100% 0,97% 100%,0 100%);position:relative;overflow:hidden;box-shadow:0 6px 22px #ff1e2d44}
+.btn:after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,#ffffff55,transparent);transform:skewX(-20deg);animation:shine 3s infinite}
+.btn.ghost:after,.btn:disabled:after{display:none}.btn.ghost{box-shadow:none}
+@keyframes shine{60%,100%{left:130%}}
+.btn:active{transform:scale(.97)}.btn:disabled{background:#2a2a2e;color:#777}
+.btn.ghost{background:transparent;border:1px solid var(--line)}
+
+/* ===== Ranking com Caixa de Rolagem ===== */
+.sect{margin-top:42px}
+.sect:before{content:"";display:block;height:10px;margin-bottom:22px;opacity:.5;background:repeating-conic-gradient(#fff 0 25%,#000 0 50%) 0 0/10px 10px}
+.rank-scroll{max-height:360px;overflow-y:auto;padding-right:6px;scroll-behavior:smooth}
+.row{display:grid;grid-template-columns:34px 46px 1fr;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:10px;transition:transform .2s,border-color .2s}
+.row:first-child{border-color:var(--red);box-shadow:0 0 28px #ff1e2d33,inset 0 0 30px #ff1e2d12}
+.pos{font:24px 'Russo One';font-style:italic;color:var(--mut)}.row:first-child .pos{color:var(--red)}
+.av{width:46px;height:46px;border-radius:50%;background:#000 center/cover;border:2px solid var(--line)}
+.rn{display:flex;justify-content:space-between;gap:8px;font-weight:800}.rn span{color:var(--mut);font-weight:600;font-size:13px;white-space:nowrap}
+.bar{height:7px;background:#222;border-radius:9px;margin-top:8px;overflow:hidden;box-shadow:inset 0 0 6px #000}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#8d0010,var(--red));transition:width .8s;position:relative;animation:grow .9s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 10px #ff1e2d99}
+.bar i:after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,#ffffff66,transparent 70%);animation:shine2 2s infinite}
+@keyframes grow{from{width:0}}@keyframes shine2{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+
+/* ===== Modal & Confetti de Voto ===== */
+.hidden-r{text-align:center;color:var(--mut);padding:26px;border:1px dashed var(--line);border-radius:14px;width:100%}
+.modal{position:fixed;inset:0;background:#000d;backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center;z-index:9;opacity:0;transition:opacity .25s}.modal.on{display:flex;opacity:1}
+.sheet{background:var(--card);border-top:3px solid var(--red);border-radius:22px 22px 0 0;padding:26px 20px calc(24px + env(safe-area-inset-bottom));width:100%;max-width:560px;animation:sheetUp .3s cubic-bezier(.2,.9,.3,1.1)}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet h2{font-size:24px}.sheet p{color:var(--mut);margin:10px 0 6px;line-height:1.5}
+.preview-pick{display:flex;align-items:center;gap:14px;background:#0d0d10;border:1px solid var(--line);border-radius:14px;padding:12px;margin:14px 0}
+.preview-pick img{width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid var(--red)}
+.thanks{text-align:center;padding:70px 0 24px}.thanks h1{font-size:40px;line-height:1.1}.thanks p{color:var(--mut);margin-top:16px;line-height:1.5}
+.flag{font-size:70px;animation:flagBounce .7s cubic-bezier(.2,1.5,.4,1)}
+@keyframes flagBounce{0%{transform:scale(0) rotate(-25deg)}70%{transform:scale(1.15) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
+.spark{position:fixed;pointer-events:none;z-index:50;font-size:22px;animation:fly 1.3s ease-out forwards}
+@keyframes fly{0%{opacity:1;transform:translate(0,0) scale(.6) rotate(0deg)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.3) rotate(var(--rot))}}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#fff;color:#000;padding:12px 20px;border-radius:12px;font-weight:800;z-index:20;display:none}
+input[type=text],input[type=number],input[type=email],input[type=password]{width:100%;padding:13px;margin-top:8px;background:#0d0d0f;border:1px solid var(--line);border-radius:10px;color:#fff;font:inherit}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px}
+.tg{display:flex;justify-content:space-between;align-items:center;padding:10px 0;font-weight:600}
+.tg input{width:46px;height:26px;accent-color:var(--red)}
+.ad{display:flex;gap:8px;margin-top:8px}.ad .btn{margin:0;padding:10px;font-size:13px}
+a{color:var(--mut)}
+#livebar{position:fixed;top:0;left:0;right:0;height:3px;z-index:30;background:#ffffff10}
+#livebar i,.lv i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),#fff);animation:fill 15s linear infinite}
+#livebar i{box-shadow:0 0 12px var(--red)}
+@keyframes fill{to{width:100%}}
+.sh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:16px}
+.sh h2{margin:0;font-size:26px}.sh h2:before{content:"";display:inline-block;width:5px;height:22px;background:var(--red);margin-right:10px;transform:skewX(-20deg);vertical-align:-3px}
+.lv{min-width:104px;font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--mut)}
+.lv b{display:flex;align-items:center;gap:6px;color:#fff;font-weight:800;margin-bottom:6px}
+.lv b .dot{width:7px;height:7px}.lv .t{height:3px;background:#222;border-radius:9px;overflow:hidden}
+</style></head><body>
+<div id="livebar"><i></i></div>
+<div class="wrap" id="app"></div>
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const SUPABASE_URL = "https://stblptmgncfjfunejifa.supabase.co";
+const SUPABASE_KEY = "sb_publishable_AcADk8bqLGX3KBYQ1_ZDZg_HU-Td7QE";
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const PLACEHOLDER = "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400"><rect width="640" height="400" fill="#111"/><text x="50%" y="52%" fill="#ff1e2d" font-size="90" font-family="Impact" text-anchor="middle" font-style="italic">DRIFT</text></svg>');
+const img = u => `url('${esc(u || PLACEHOLDER)}')`;
+let drivers = [], settings = {voting_open: true, ranking_public: true}, results = {}, sel = null, filterTxt = "", activeSlide = 0;
+
+const token = () => { let t = localStorage.getItem("ar_tok"); if (!t) { t = crypto.randomUUID() + crypto.randomUUID(); localStorage.setItem("ar_tok", t); } return t; };
+const toast = m => { const t = $("#toast"); t.textContent = m; t.style.display = "block"; setTimeout(() => t.style.display = "none", 2600); };
+const LIVE = `<div class="lv"><b><span class="dot"></span>AO VIVO</b><div class="t"><i></i></div></div>`;
+const prevN = {};
+function animateNums(){document.querySelectorAll('.cu').forEach(el=>{const to=+el.dataset.n,k=el.dataset.k,from=prevN[k]||0;prevN[k]=to;if(from===to){el.textContent=to;return}const t0=performance.now();(function f(t){const x=Math.min(1,(t-t0)/700);el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-x,3)));if(x<1)requestAnimationFrame(f)})(t0)})}
+const LOGO_URL = ""; // Cole o link ou nome do arquivo da logo aqui (ex: "logo.png")
+
+const head = `<div class="brand">${
+  LOGO_URL
+    ? `<img src="${esc(LOGO_URL)}" alt="Arena Race">`
+    : `<div class="stripe"></div><div><b>ARENA RACE</b><small>DRIFT SHOW</small></div>`
+}</div>`;
+
+/* Efeito de partículas ao votar */
+function burstRace() {
+  const icons = ["🏁", "🔥", "🏎️", "⚡"];
+  for (let i = 0; i < 22; i++) {
+    const el = document.createElement("div");
+    el.className = "spark";
+    el.textContent = icons[i % icons.length];
+    el.style.left = (window.innerWidth / 2) + "px";
+    el.style.top = (window.innerHeight * 0.55) + "px";
+    const angle = (Math.PI * 2 * i) / 22 + (Math.random() * 0.4);
+    const dist = 90 + Math.random() * 190;
+    el.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+    el.style.setProperty("--dy", (Math.sin(angle) * dist - 80) + "px");
+    el.style.setProperty("--rot", (Math.random() * 360 - 180) + "deg");
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1350);
+  }
+}
+
+let lastSig = "";
+async function load(force) {
+  const [d, s, r] = await Promise.all([
+    sb.from("drivers").select("*").order("number"),
+    sb.from("settings").select("*").eq("id", 1).single(),
+    sb.rpc("get_results")
+  ]);
+  drivers = d.data || []; if (s.data) settings = s.data;
+  results = {}; (r.data || []).forEach(x => results[x.driver_id] = Number(x.total));
+  const sig = JSON.stringify([drivers, settings, results]);
+  if (!force && sig === lastSig) return;
+  lastSig = sig; route(true);
+}
+function route(soft) {
+  if (location.hash === "#admin") return adminView(soft);
+  if (soft && document.activeElement?.tagName === "INPUT") return;
+  publicView(); animateNums();
+}
+addEventListener("hashchange", () => route());
+
+/* ---------- PÚBLICO ---------- */
+function getFilteredDrivers() {
+  const q = filterTxt.trim().toLowerCase();
+  if (!q) return drivers;
+  return drivers.filter(d =>
+    String(d.name || "").toLowerCase().includes(q) ||
+    String(d.number || "").includes(q) ||
+    String(d.car || "").toLowerCase().includes(q) ||
+    String(d.team || "").toLowerCase().includes(q)
+  );
+}
+
+function publicView() {
+  const voted = localStorage.getItem("ar_voted");
+  if (voted) {
+    $("#app").innerHTML = head + `<div class="thanks"><div class="flag">🏁</div><h1>VOTO REGISTRADO! 🏁</h1><p>Você fez parte do resultado. Aguarde a divulgação do piloto vencedor.</p></div>` + rankingHTML();
+    return;
+  }
+  const open = settings.voting_open;
+  const list = getFilteredDrivers();
+  $("#app").innerHTML = head + `
+  <div class="hero"><h1>QUEM FOI O <span>DESTAQUE</span> DA PISTA?</h1>
+  <p>Deslize para escolher o piloto, toque no card e confirme o seu voto.</p>
+  <div class="pill ${open ? "" : "closed"}"><span class="dot"></span>${open ? "VOTAÇÃO ABERTA" : "VOTAÇÃO ENCERRADA"}</div></div>
+  <div class="sh" style="margin-top:26px"><h2>Pilotos (${list.length})</h2>${LIVE}</div>
+  <div class="search-box">
+    <input type="text" id="q_driver" placeholder="Buscar por nome, número ou carro..." value="${esc(filterTxt)}">
+  </div>
+  <div class="carousel-wrap">
+    <div class="grid" id="d_track">${list.map((d, i) => `
+      <div class="card ${sel === d.id ? "sel" : ""}" data-id="${d.id}" style="animation-delay:${i * 50}ms" onclick="selectCard('${d.id}', this)">
+        <div class="ph" style="background-image:${img(d.photo_url)}"><div class="num"><i>#</i>${esc(d.number)}</div></div>
+        <div class="info"><h2>${esc(d.name)}</h2><p>${esc(d.car)}</p>${d.team ? `<span class="team">${esc(d.team)}</span>` : ""}
+        <button class="btn" ${open ? "" : "disabled"} onclick="event.stopPropagation();ask('${d.id}')">${sel === d.id ? "✔ CONFIRMAR ESTE PILOTO" : "VOTAR NESSE PILOTO"}</button></div>
+      </div>`).join("") || `<div class="hidden-r">Nenhum piloto encontrado…</div>`}
+    </div>
+    ${list.length > 1 ? `
+    <div class="nav-arrows">
+      <button class="nav-btn" type="button" onclick="slideDrivers(-1)" aria-label="Anterior">‹</button>
+      <div class="dots-ind" id="d_dots">${list.map((d, idx) => `<span class="${idx === activeSlide ? "on" : ""}" onclick="goSlide(${idx})"></span>`).join("")}</div>
+      <button class="nav-btn" type="button" onclick="slideDrivers(1)" aria-label="Próximo">›</button>
+    </div>` : ""}
+  </div>` + rankingHTML();
+
+  bindCarouselEvents();
+}
+
+function bindCarouselEvents() {
+  const inp = $("#q_driver");
+  if (inp) {
+    inp.oninput = e => {
+      filterTxt = e.target.value;
+      activeSlide = 0;
+      const pos = e.target.selectionStart;
+      publicView();
+      const newInp = $("#q_driver");
+      if (newInp) { newInp.focus(); newInp.setSelectionRange(pos, pos); }
+    };
+  }
+  const track = $("#d_track");
+  if (track) {
+    track.addEventListener("scroll", () => {
+      const card = track.querySelector(".card");
+      if (!card) return;
+      const step = card.offsetWidth + 14;
+      const idx = Math.round(track.scrollLeft / step);
+      if (idx !== activeSlide) {
+        activeSlide = idx;
+        document.querySelectorAll("#d_dots span").forEach((dot, i) => dot.classList.toggle("on", i === idx));
+      }
+    }, { passive: true });
+  }
+}
+
+function slideDrivers(dir) {
+  const track = $("#d_track");
+  const card = track?.querySelector(".card");
+  if (!track || !card) return;
+  track.scrollBy({ left: dir * (card.offsetWidth + 14), behavior: "smooth" });
+}
+
+function goSlide(idx) {
+  const track = $("#d_track");
+  const card = track?.querySelector(".card");
+  if (!track || !card) return;
+  track.scrollTo({ left: idx * (card.offsetWidth + 14), behavior: "smooth" });
+}
+
+function selectCard(id, el) {
+  if (navigator.vibrate) navigator.vibrate(25);
+  sel = id;
+  document.querySelectorAll(".card").forEach(c => {
+    const isThis = c.dataset.id === id;
+    c.classList.toggle("sel", isThis);
+    const btn = c.querySelector(".btn");
+    if (btn && !btn.disabled) btn.textContent = isThis ? "✔ CONFIRMAR ESTE PILOTO" : "VOTAR NESSE PILOTO";
+  });
+  if (el) {
+    el.classList.remove("picking");
+    void el.offsetWidth;
+    el.classList.add("picking");
+    el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }
+}
+
+function rankingHTML() {
+  let body;
+  if (!settings.ranking_public) body = `<div class="hidden-r">🔒 O ranking será revelado no final do evento.</div>`;
+  else {
+    const total = Object.values(results).reduce((a, b) => a + b, 0);
+    body = `<div class="rank-scroll">${[...drivers].sort((a, b) => (results[b.id] || 0) - (results[a.id] || 0)).map((d, i) => {
+      const v = results[d.id] || 0, p = total ? v / total * 100 : 0;
+      return `<div class="row"><div class="pos">${i + 1}</div><div class="av" style="background-image:${img(d.photo_url)}"></div>
+      <div><div class="rn">${esc(d.name)}<span><b class="cu" data-k="${d.id}" data-n="${v}">${v}</b> votos · ${p.toFixed(1)}%</span></div><div class="bar"><i style="width:${p}%"></i></div></div></div>`;
+    }).join("") || `<div class="hidden-r">Sem votos computados ainda.</div>`}</div>`;
+  }
+  return `<div class="sect"><div class="sh"><h2>Ranking</h2>${LIVE}</div>${body}</div><p style="text-align:center;margin-top:30px;font-size:12px"><a href="#admin">·</a></p>`;
+}
+
+function ask(id) {
+  if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+  sel = id;
+  const d = drivers.find(x => x.id === id);
+  selectCard(id);
+  $("#sheet").innerHTML = `<h2>Confirmar voto?</h2>
+  <div class="preview-pick">
+    <img src="${esc(d.photo_url || PLACEHOLDER)}" alt="${esc(d.name)}">
+    <div><b style="font-size:18px;display:block">#${esc(d.number)} ${esc(d.name)}</b><span style="color:var(--mut);font-size:13px">${esc(d.car || "")}</span></div>
+  </div>
+  <p>Só é possível votar uma vez neste dispositivo.</p>
+  <button class="btn" id="ok">CONFIRMAR VOTO 🏁</button><button class="btn ghost" onclick="closeM()">ESCOLHER OUTRO</button>`;
+  $("#modal").classList.add("on");
+  $("#ok").onclick = async () => {
+    $("#ok").disabled = true; $("#ok").textContent = "ENVIANDO…";
+    const { data, error } = await sb.rpc("cast_vote", { p_driver: id, p_token: token() });
+    closeM();
+    if (error) return toast("Erro de conexão. Tente de novo.");
+    if (data === "ok" || data === "duplicate") {
+      if (navigator.vibrate) navigator.vibrate([50, 60, 100]);
+      burstRace();
+      localStorage.setItem("ar_voted", "1");
+      load(true);
+    }
+    else toast(data === "closed" ? "A votação foi encerrada." : "Voto inválido.");
+  };
+}
+function closeM() { $("#modal").classList.remove("on"); }
+
+/* ---------- ADMIN ---------- */
+async function adminView(soft) {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    $("#app").innerHTML = head + `<div class="panel"><h2>Área administrativa</h2><input type="email" id="em" placeholder="E-mail"><input type="password" id="pw" placeholder="Senha"><button class="btn" id="lg">ENTRAR</button></div><p style="margin-top:20px"><a href="#">← Voltar</a></p>`;
+    $("#lg").onclick = async () => { const { error } = await sb.auth.signInWithPassword({ email: $("#em").value, password: $("#pw").value }); error ? toast("Login inválido") : adminView(); };
+    return;
+  }
+  const { data: adm, error: admErr } = await sb.rpc("is_admin");
+  if (!adm) {
+    $("#app").innerHTML = head + `<div class="panel">Este usuário não é administrador.<br><small style="color:#9a9aa3">ID: ${session.user.id}${admErr ? " | Erro: " + admErr.message : ""}</small><button class="btn ghost" onclick="out()">SAIR</button></div>`;
+    return;
+  }
+  if (document.activeElement?.tagName === "INPUT" && $("#f_name")) return;
+  const total = Object.values(results).reduce((a, b) => a + b, 0);
+  $("#app").innerHTML = head + `<h2 style="margin-top:24px">Painel</h2>
+  <div class="panel"><div class="tg">Votação aberta<input type="checkbox" id="t1" ${settings.voting_open ? "checked" : ""}></div>
+  <div class="tg">Ranking público<input type="checkbox" id="t2" ${settings.ranking_public ? "checked" : ""}></div>
+  <button class="btn ghost" id="rs">REINICIAR VOTAÇÃO</button></div>
+  <div class="panel"><b>Resultados em tempo real — ${total} votos</b><div class="rank-scroll" style="margin-top:12px">${[...drivers].sort((a, b) => (results[b.id] || 0) - (results[a.id] || 0)).map((d, i) => {
+    const v = results[d.id] || 0, p = total ? v / total * 100 : 0;
+    return `<div class="row"><div class="pos">${i + 1}</div><div class="av" style="background-image:${img(d.photo_url)}"></div><div><div class="rn">${esc(d.name)}<span>${v} · ${p.toFixed(1)}%</span></div><div class="bar"><i style="width:${p}%"></i></div></div></div>`;
+  }).join("")}</div></div>
+  <div class="panel"><b id="ft">Adicionar piloto</b><input type="hidden" id="f_id">
+  <input type="text" id="f_name" placeholder="Nome"><input type="number" id="f_num" placeholder="Número"><input type="text" id="f_car" placeholder="Carro (modelo)"><input type="text" id="f_team" placeholder="Equipe (opcional)">
+  <input type="text" id="f_file" style="display:none"><input type="file" id="f_img" accept="image/*" style="margin-top:10px;color:var(--mut)">
+  <button class="btn" id="sv">SALVAR PILOTO</button></div>
+  <div class="panel"><b>Pilotos</b><div class="rank-scroll">${drivers.map(d => `<div class="row" style="margin-top:10px"><div class="pos">${esc(d.number)}</div><div class="av" style="background-image:${img(d.photo_url)}"></div><div><div class="rn">${esc(d.name)}</div><div class="ad"><button class="btn ghost" onclick="edit('${d.id}')">EDITAR</button><button class="btn ghost" onclick="del('${d.id}')">EXCLUIR</button></div></div></div>`).join("")}</div></div>
+  <p style="margin-top:20px"><a href="#">← Ver site</a> · <a href="#" onclick="out()">Sair</a></p>`;
+  $("#t1").onchange = e => upd({ voting_open: e.target.checked });
+  $("#t2").onchange = e => upd({ ranking_public: e.target.checked });
+  $("#rs").onclick = async () => {
+    if (prompt("Isso apaga TODOS os votos. Digite REINICIAR para confirmar:") !== "REINICIAR") return;
+    const { error } = await sb.rpc("reset_votes"); error ? toast("Erro") : (toast("Votação reiniciada"), load(true));
+  };
+  $("#sv").onclick = save;
+}
+const upd = async o => { await sb.from("settings").update(o).eq("id", 1); load(true); };
+async function save() {
+  const id = $("#f_id").value, f = $("#f_img").files[0];
+  const row = { name: $("#f_name").value.trim(), number: +$("#f_num").value || null, car: $("#f_car").value.trim(), team: $("#f_team").value.trim() || null };
+  if (!row.name) return toast("Informe o nome");
+  if (f) {
+    const path = crypto.randomUUID() + "." + (f.name.split(".").pop() || "jpg");
+    const up = await sb.storage.from("drivers").upload(path, f, { contentType: f.type });
+    if (up.error) return toast("Falha no upload");
+    row.photo_url = sb.storage.from("drivers").getPublicUrl(path).data.publicUrl;
+  }
+  const r = id ? await sb.from("drivers").update(row).eq("id", id) : await sb.from("drivers").insert(row);
+  r.error ? toast("Erro ao salvar") : (toast("Salvo ✔"), load(true));
+}
+function edit(id) {
+  const d = drivers.find(x => x.id === id);
+  $("#f_id").value = id; $("#f_name").value = d.name; $("#f_num").value = d.number ?? ""; $("#f_car").value = d.car ?? ""; $("#f_team").value = d.team ?? "";
+  $("#ft").textContent = "Editando: " + d.name; $("#f_name").scrollIntoView({ behavior: "smooth" });
+}
+async function del(id) { if (confirm("Excluir piloto e seus votos?")) { await sb.from("drivers").delete().eq("id", id); load(true); } }
+async function out() { await sb.auth.signOut(); location.hash = ""; load(true); }
+
+load(true);
+setInterval(() => {
+  if (!["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) load();
+}, 15000);
+sb.channel("live").on("postgres_changes", { event: "*", schema: "public", table: "settings" }, () => load(true))
+  .on("postgres_changes", { event: "*", schema: "public", table: "drivers" }, () => load(true)).subscribe();
+</script></body></html>
